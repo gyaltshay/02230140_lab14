@@ -1,0 +1,62 @@
+# Purpose: RollingUpdate release 1.1.0.
+# Apply: kubectl apply -f manifests/rolling/05-rolling.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notice-board
+  namespace: nb-02230140 # Identity enforced by assessed lab.
+  labels:
+    app: notice-board # Workload reporting selector.
+    cte412/release-mode: rolling # Distinguishes release controller.
+  annotations:
+    kubernetes.io/change-cause: "RollingUpdate release 1.1.0" # Rollout history trace.
+spec:
+  replicas: 3 # Three production Pods per colour/release.
+  strategy:
+    type: RollingUpdate # Keeps serving old Pods during replacement.
+    rollingUpdate:
+      maxUnavailable: 0 # Never remove a ready Pod before a replacement is available.
+      maxSurge: 1 # Permits one extra temporary Pod.
+  minReadySeconds: 5 # Require five stable Ready seconds before progressing.
+  progressDeadlineSeconds: 60 # Mark stalled release failed after one minute.
+  selector:
+    matchLabels:
+      app: notice-board
+      release: rolling
+  template:
+    metadata:
+      labels:
+        app: notice-board
+        release: rolling
+        version: '1.1.0' # Distinguishes versions in logs.
+    spec:
+      containers:
+        - name: notice-board
+          image: notice-board:02230140-1.1.0 # Student-specific local image.
+          imagePullPolicy: Never # Never attempt registry pull.
+          ports:
+            - name: http
+              containerPort: 8080 # Application listening port.
+          resources:
+            requests:
+              cpu: 50m # Six Pods fit with the monitor within 1 CPU.
+              memory: 32Mi # Six Pods fit with the monitor within 1Gi.
+            limits:
+              cpu: 100m # Six Pods fit with the monitor within 2 CPUs.
+              memory: 64Mi # Six Pods fit with monitor within 2Gi.
+          readinessProbe:
+            httpGet:
+              path: /healthz # Reject warming and deliberately broken Pods.
+              port: http
+            periodSeconds: 2 # Frequent readiness checks for quick releases.
+            timeoutSeconds: 1 # Local app should respond quickly.
+            failureThreshold: 1 # Remove failed Pod from endpoints quickly.
+            successThreshold: 1 # Normal readiness recovery.
+          livenessProbe:
+            httpGet:
+              path: /version # Not /healthz: warm-up/broken readiness must not cause restarts.
+              port: http
+            initialDelaySeconds: 10 # Give process startup margin.
+            periodSeconds: 10 # Avoid excessive liveness requests.
+            timeoutSeconds: 1 # Local app response expected quickly.
+            failureThreshold: 3 # Restart only after repeated failures.

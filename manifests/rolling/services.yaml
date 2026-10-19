@@ -1,0 +1,30 @@
+# Purpose: Route internal monitor and localhost NodePort to rolling release Pods.
+# Apply: kubectl apply -f manifests/rolling/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: notice-board
+  namespace: nb-02230140
+spec:
+  type: ClusterIP # Internal DNS endpoint for monitor.
+  selector:
+    app: notice-board
+    release: rolling # Select only single-Deployment Pods.
+  ports:
+    - port: 80 # Internal HTTP port.
+      targetPort: http # Named port 8080 of application.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notice-board-ext
+  namespace: nb-02230140
+spec:
+  type: NodePort # Test service from Windows localhost.
+  selector:
+    app: notice-board
+    release: rolling # Match internal production service.
+  ports:
+    - port: 80
+      targetPort: http
+      nodePort: 30090 # Matches kind host port.

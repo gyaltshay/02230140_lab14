@@ -1,0 +1,16 @@
+# Purpose: Default per-container resources bounded by the namespace quota.
+# Apply: kubectl apply -f manifests/base/limitrange.yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: nb-limits
+  namespace: nb-02230140 # Applies to student namespace.
+spec:
+  limits:
+    - type: Container # Container-level defaults.
+      defaultRequest:
+        cpu: 50m # 7 small containers request under 1 CPU total.
+        memory: 32Mi # 7 small containers request under 1Gi total.
+      default:
+        cpu: 100m # 7 small containers limit under 2 CPUs total.
+        memory: 64Mi # 7 small containers limit under 2Gi total.

@@ -1,0 +1,13 @@
+# Purpose: Three-node kind cluster with localhost-only NodePort access.
+# Apply: kind create cluster --name cte412-02230140 --config cluster/kind-cluster.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane # One control-plane node is required by the assessment.
+    extraPortMappings:
+      - containerPort: 30090 # Matches NodePort Service's fixed port.
+        hostPort: 30090 # Exposes production to the local Windows host.
+        listenAddress: "127.0.0.1" # Prevents access from other interfaces.
+        protocol: TCP # HTTP uses TCP.
+  - role: worker # First worker for replicated Pods.
+  - role: worker # Second worker for replicated Pods.

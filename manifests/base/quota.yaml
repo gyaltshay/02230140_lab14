@@ -1,0 +1,15 @@
+# Purpose: Enforce assessed resource caps.
+# Apply: kubectl apply -f manifests/base/quota.yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: nb-quota
+  namespace: nb-02230140 # Namespace-specific quota.
+spec:
+  hard:
+    requests.cpu: "1" # Assessed CPU request quota.
+    requests.memory: 1Gi # Assessed memory request quota.
+    limits.cpu: "2" # Assessed CPU limit quota.
+    limits.memory: 2Gi # Assessed memory limit quota.
+    pods: "15" # Headroom for both colours, monitor and transition.
+    count/services: "4" # Internal/external/preview Services fit.

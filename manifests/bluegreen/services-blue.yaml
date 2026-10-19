@@ -1,0 +1,44 @@
+# Purpose: Production uses blue; preview remains on green.
+# Apply: kubectl apply -f manifests/bluegreen/services-blue.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: notice-board
+  namespace: nb-02230140
+spec:
+  type: ClusterIP # Stable internal URL used by continuous monitor.
+  selector:
+    app: notice-board
+    slot: blue # Production switched declaratively to blue.
+  ports:
+    - port: 80
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notice-board-ext
+  namespace: nb-02230140
+spec:
+  type: NodePort # Maps to host port 30090.
+  selector:
+    app: notice-board
+    slot: blue # Match internal production slot.
+  ports:
+    - port: 80
+      targetPort: http
+      nodePort: 30090 # Host-only access via kind port mapping.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notice-board-preview
+  namespace: nb-02230140
+spec:
+  type: ClusterIP # Internal validation without switching production.
+  selector:
+    app: notice-board
+    slot: green # Preview ALWAYS stays green.
+  ports:
+    - port: 80
+      targetPort: http

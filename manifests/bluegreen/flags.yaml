@@ -1,0 +1,11 @@
+# Purpose: ConfigMap feature flag; flip to true for Task 8.
+# Apply: kubectl apply -f manifests/bluegreen/flags.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notice-board-flags
+  namespace: nb-02230140
+  labels:
+    app: notice-board # Part of application runtime configuration.
+data:
+  FEATURE_PINNED: 'false' # Task 8 starts with pinned-first feature disabled.

@@ -1,0 +1,34 @@
+# Purpose: Continuous 0.5-second production availability monitor (do not restart between tasks).
+# Apply: kubectl apply -f manifests/base/monitor.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: monitor
+  namespace: nb-02230140 # DNS notice-board resolves inside this namespace.
+  labels:
+    app: availability-monitor # Keep separate from notice-board Pod counts.
+spec:
+  restartPolicy: Never # A monitoring restart would lose measurement continuity.
+  containers:
+    - name: monitor
+      image: busybox:1.36 # BusyBox allowed by the practical.
+      imagePullPolicy: IfNotPresent # BusyBox may be pulled; notice-board images never may.
+      resources:
+        requests:
+          cpu: 10m # Leaves most CPU quota to release workloads.
+          memory: 16Mi # Small monitor request.
+        limits:
+          cpu: 25m # Prevents monitor resource spikes.
+          memory: 32Mi # Keeps memory usage within quota.
+      command: ["/bin/sh", "-c"] # Run a shell polling loop.
+      args:
+        - |
+          while :; do
+            TS=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+            if BODY=$(wget -qO- -T 2 http://notice-board/version 2>&1); then
+              echo "$TS OK $BODY"
+            else
+              echo "$TS FAIL $BODY"
+            fi
+            sleep 0.5
+          done

@@ -1,0 +1,11 @@
+# Purpose: Dedicated assessment namespace.
+# Apply: kubectl apply -f manifests/base/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nb-02230140 # Exact namespace identity mandated by practical.
+  labels:
+    app.kubernetes.io/part-of: campus-notice-board # Identifies project resources.
+    cte412/practical: "06" # Value stated in assessed lab (despite Lab 14 title).
+  annotations:
+    cte412/student-name: "Pasang Gyeltshen" # Must record your actual full name.
